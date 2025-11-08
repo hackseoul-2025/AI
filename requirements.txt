@@ -1,0 +1,29 @@
+# FastAPI + RAG + LLM 서비스 의존성
+
+# FastAPI 관련 (2025년 최신 버전)
+fastapi>=0.121.0
+uvicorn[standard]>=0.38.0
+pydantic>=2.12.0
+pydantic-settings>=2.11.0
+python-multipart>=0.0.20
+
+# OpenAI
+openai>=1.50.0
+
+# 유틸리티
+python-dotenv>=1.2.0
+
+# RAG (Python 3.12 호환 최신 버전)
+langchain>=1.0.5
+langchain-openai>=0.3.0
+langchain-community>=0.3.0
+langchain-huggingface>=0.1.0
+chromadb>=1.3.0
+tiktoken>=0.8.0
+
+# HuggingFace Embeddings (로컬 GPU)
+sentence-transformers>=2.3.0
+torch>=2.0.0
+
+# 옵션: 로컬 SLM 사용 시
+# transformers==4.36.2
