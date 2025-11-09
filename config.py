@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     
     # OpenAI 설정
     OPENAI_API_KEY: str
-    OPENAI_MODEL: str = "gpt-4o-mini"
-    OPENAI_TEMPERATURE: float = 0.7
-    OPENAI_MAX_TOKENS: int = 4000  # 토큰 제한 증가 (1000 -> 4000)
+    OPENAI_MODEL: str = "gpt-4o-mini"  # .env에서 오버라이드됨
+    OPENAI_TEMPERATURE: float = 0.7  # .env에서 오버라이드됨
+    OPENAI_MAX_TOKENS: int = 3000  # .env에서 오버라이드됨
     
     # 문서 관리 (통합)
     DOCUMENTS_DIR: str = "documents"

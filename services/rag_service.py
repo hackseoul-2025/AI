@@ -31,8 +31,8 @@ class RAGService:
         )
         
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200
+            chunk_size=500,  # 1000->500: 더 구체적인 chunk
+            chunk_overlap=100  # 200->100: 중복 감소
         )
         
         # 박물관별/클래스별 벡터 스토어
@@ -116,6 +116,44 @@ class RAGService:
         logger.info(f"로드된 박물관: {list(self.vector_stores.keys())}")
     
     
+    def _expand_query(self, query: str) -> List[str]:
+        """
+        쿼리 확장 - 다양한 표현으로 검색 범위 넓히기
+        """
+        expanded = [query]  # 원본 질문
+        
+        # 한국어 구어체 → 문어체 변환
+        conversions = {
+            '누가': '작가',
+            '언제': '제작시기',
+            '어디': '위치',
+            '뭐': '무엇',
+            '어떻게': '방법',
+            '왜': '이유',
+            '몇': '수량'
+        }
+        
+        expanded_query = query
+        for key, value in conversions.items():
+            if key in query:
+                expanded_query = query.replace(key, value)
+                expanded.append(expanded_query)
+                break
+        
+        # 핵심 키워드 추출
+        if '만들' in query or '그리' in query:
+            expanded.append('작가 화가 창작자')
+        if '언제' in query or '시기' in query:
+            expanded.append('연도 시대 제작년도')
+        if '어디' in query or '위치' in query:
+            expanded.append('장소 소장처 전시')
+        if '크기' in query or '사이즈' in query:
+            expanded.append('크기 치수 규격')
+        if '특징' in query or '유명' in query:
+            expanded.append('특징 중요성 의미')
+            
+        return list(set(expanded))  # 중복 제거
+    
     async def retrieve_documents(
         self, 
         location: str,
@@ -124,7 +162,7 @@ class RAGService:
         top_k: Optional[int] = None
     ) -> List[Dict[str, str]]:
         """
-        벡터 유사도 기반 문서 검색
+        벡터 유사도 기반 문서 검색 (쿼리 확장 적용)
         
         Args:
             museum_name: 박물관명 (예: "louvre")
@@ -147,13 +185,38 @@ class RAGService:
             return []
         
         try:
-            # 벡터 유사도 검색
             vector_store = self.vector_stores[location][class_name]
-            docs = vector_store.similarity_search(query, k=top_k)
+            
+            # 쿼리 확장
+            expanded_queries = self._expand_query(query)
+            logger.info(f"쿼리 확장: {query} → {expanded_queries}")
+            
+            all_docs = []
+            seen_content = set()
+            
+            # 각 확장된 쿼리로 검색
+            for exp_query in expanded_queries:
+                # MMR 검색 (다양성 + 관련성 균형)
+                docs = vector_store.max_marginal_relevance_search(
+                    exp_query, 
+                    k=top_k,
+                    fetch_k=top_k * 3,
+                    lambda_mult=0.6  # 0.5→0.6: 관련성 약간 더 우선
+                )
+                
+                # 중복 제거하면서 추가
+                for doc in docs:
+                    content_hash = doc.page_content[:100]  # 앞 100자로 중복 체크
+                    if content_hash not in seen_content:
+                        seen_content.add(content_hash)
+                        all_docs.append(doc)
+            
+            # top_k 개수로 제한
+            all_docs = all_docs[:top_k]
             
             # 결과 포맷팅
             results = []
-            for doc in docs:
+            for doc in all_docs:
                 results.append({
                     "content": doc.page_content,
                     "museum": doc.metadata.get("museum", location),
