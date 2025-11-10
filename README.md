@@ -1,172 +1,277 @@
-# RAG + LLM API 서비스
+# 🖼️ Museum AI Docent - AngelHack Seoul 2025
 
-FastAPI 기반 Object Detection + RAG + Context-aware LLM 백엔드
+AI-powered museum docent service using **RAG** and **LLM** for personalized artwork conversations.
 
-## 📁 프로젝트 구조
+---
+
+## 📘 Overview
+
+An AI docent service backend that provides **first-person conversational responses as if the artwork itself is speaking** when museum visitors ask questions about exhibits.  
+Combines **RAG (Retrieval-Augmented Generation)** with **LLM** to understand context and generate personalized explanations reflecting each artwork's unique persona.
+
+> **Purpose:** Developed for AngelHack Seoul 2025 Hackathon
+
+---
+
+## 🚀 Key Features
+
+- **🧠 Vector-based RAG System**  
+  Semantic search powered by LangChain + ChromaDB + HuggingFace Embeddings
+
+- **🎭 Artwork Personas**  
+  First-person character-based responses per artwork (e.g., "I am the Mona Lisa.")
+
+- **💬 Conversation Memory**  
+  Maintains context by remembering conversation history
+
+- **🏛️ Multi-museum Support**  
+  Structured knowledge base organized by museum and artwork
+
+- **⚡ Fast Response**  
+  Quick response times through asynchronous background processing
+
+---
+
+## 🧩 System Architecture
 
 ```
-backend/
-├── main.py                 # FastAPI 메인 애플리케이션
-├── config.py              # 설정 관리
-├── requirements.txt       # 의존성
-├── .env.example          # 환경변수 예시
+FastAPI Backend
+    │
+    ├── RAG Service (LangChain + ChromaDB)
+    │   └── Vector-based semantic search for artwork information
+    │
+    ├── LLM Service (OpenAI GPT)
+    │   └── Persona-based conversational responses
+    │
+    └── SLM Service
+        └── Conversation history and context management
+```
+
+## 📁 Project Structure
+
+```
+AI/
+├── main.py                      # FastAPI application entry point
+├── config.py                    # Configuration management (pydantic-settings)
+├── requirements.txt             # Python dependencies
+├── .env.example                 # Environment variables template
+│
+├── model/
+│   ├── request/
+│   │   └── chat_request.py     # ChatRequest: question, room_id(int), class_name, location
+│   └── response/
+│       └── chat_response.py    # ChatResponse: response(string)
+│
 ├── services/
-│   ├── rag_service.py    # RAG 문서 검색
-│   ├── slm_service.py    # 대화 컨텍스트 요약
-│   └── llm_service.py    # OpenAI ChatGPT 답변 생성
-├── rag_documents/        # 클래스별 RAG 문서
-│   └── monalisa/
-│       ├── description.txt
-│       ├── history.txt
-│       └── artist.txt
-├── personas/             # 클래스별 페르소나
-│   ├── monalisa.txt
-│   └── default.txt
-└── conversations/        # 대화 히스토리 저장
+│   ├── rag_service.py          # RAG document retrieval (LangChain + ChromaDB)
+│   ├── llm_service.py          # LLM answer generation (OpenAI GPT)
+│   └── slm_service.py          # Conversation context management
+│
+└── documents/
+    ├── rag/                    # RAG knowledge base
+    │   └── {museum}/           # Museum-specific directory (e.g., louvre)
+    │       └── {artwork}/      # Artwork-specific documents (e.g., monalisa)
+    │           └── *.txt       # Any text files with artwork information
+    │
+    └── personas/               # Artwork personas
+        ├── default.txt         # Global default persona
+        └── {museum}/           # Museum-specific personas (e.g., louvre)
+            ├── default.txt     # Museum default persona
+            └── {artwork}.txt   # Artwork-specific persona (e.g., monalisa.txt)
+
+Note: conversations/ directory is auto-generated at runtime
 ```
 
-## 🚀 빠른 시작
+## ⚙️ Installation
 
-### 1. 의존성 설치
+### 1️⃣ Clone & Install
 
 ```bash
-cd backend
+git clone https://github.com/hackseoul-2025/AI.git
+cd AI
 pip install -r requirements.txt
 ```
 
-### 2. 환경변수 설정
+### 2️⃣ Environment Setup
 
 ```bash
 cp .env.example .env
-# .env 파일을 열어 OPENAI_API_KEY를 설정하세요
 ```
 
-### 3. RAG 문서 준비
+**.env configuration example:**
 
-```bash
-# 클래스별 디렉토리 생성 및 문서 추가
-mkdir -p rag_documents/monalisa
-echo "모나리자는 레오나르도 다빈치가 1503-1519년에 그린 초상화입니다..." > rag_documents/monalisa/description.txt
+```env
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_TEMPERATURE=0.7
+OPENAI_MAX_TOKENS=3000
+
+HOST=0.0.0.0
+PORT=8000
+DEBUG=True
+
+DOCUMENTS_DIR=documents
+CONVERSATION_STORAGE_DIR=conversations
+RAG_TOP_K=3
+DEFAULT_MUSEUM=louvre
 ```
 
-### 4. 페르소나 설정
-
-```bash
-mkdir -p personas
-echo "당신은 모나리자 작품을 전문적으로 설명하는 친절한 도슨트입니다." > personas/monalisa.txt
-```
-
-### 5. 서버 실행
+### 3️⃣ Run the Server
 
 ```bash
 python main.py
-# 또는
+# or
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-서버 실행 후 http://localhost:8000/docs 에서 API 문서 확인
+---
 
-## 📡 API 사용법
+## 🏗️ Document & Persona Setup
+
+### 🧾 RAG Documents
+
+Create UTF-8 text files in `documents/rag/{museum}/{artwork}/`:
+
+**Structure:**
+```
+documents/rag/{museum}/{artwork}/*.txt
+```
+
+- `{museum}` — Museum identifier (e.g., `louvre`, `moma`)
+- `{artwork}` — Artwork identifier (e.g., `monalisa`, `starry_night`)
+- `*.txt` — Any text files with relevant information (filename is flexible)
+
+**Example:**
+```
+documents/rag/louvre/monalisa/
+├── 001.txt
+├── 002.txt
+└── info.txt
+```
+
+All `.txt` files in the artwork directory are automatically embedded and indexed on server startup.
+
+---
+
+### 🎭 Persona Configuration
+
+Create persona files in `documents/personas/{museum}/{class_name}.txt`
+
+**Persona Resolution Order:**
+1. `documents/personas/{museum}/{class_name}.txt` (highest priority)
+2. `documents/personas/{museum}/default.txt` (museum fallback)
+3. `documents/personas/default.txt` (global fallback)
+
+**Persona Guidelines:**
+- Use first-person perspective ("I", "my")
+- Maintain friendly yet dignified tone
+
+**Example (monalisa.txt):**
+```
+You are the Mona Lisa at the Louvre Museum.
+Painted by Leonardo da Vinci (1503-1519).
+```
+
+---
+
+## 🧠 API Endpoints
 
 ### POST /chat
 
-채팅 요청
+Send a question about an artwork and receive a personalized first-person response.
 
-```bash
-curl -X POST "http://localhost:8000/chat" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "모나리자는 누가 그렸나요?",
-    "room_id": "room_12345",
-    "class_name": "monalisa"
-  }'
-```
-
-**응답:**
+**Request:**
 ```json
 {
-  "answer": "모나리자는 르네상스 시대의 위대한 예술가 레오나르도 다빈치가 그렸습니다...",
-  "room_id": "room_12345",
+  "question": "Who created you?",
+  "room_id": 12345,
   "class_name": "monalisa",
-  "metadata": {
-    "rag_docs_count": 3,
-    "has_context": false
-  }
+  "location": "louvre"
 }
 ```
 
-### GET /classes
-
-사용 가능한 클래스 목록
-
-```bash
-curl "http://localhost:8000/classes"
+**Response:**
+```json
+{
+  "response": "Leonardo da Vinci began painting me in 1503.|||It took him 16 years to complete me!|||"
+}
 ```
 
-### DELETE /conversation/{room_id}
+**Parameters:**
+- `question` (string, required): User's question
+- `room_id` (integer, required): Room ID for conversation context tracking
+- `class_name` (string, required): Artwork identifier (e.g., "monalisa", "bronze_mask")
+- `location` (string, required): Museum identifier (e.g., "louvre")
 
-대화방 히스토리 삭제
+**Note:** Response sentences are separated by `|||` delimiter for UI parsing.
 
-```bash
-curl -X DELETE "http://localhost:8000/conversation/room_12345"
+---
+
+## 🔩 Technical Details
+
+### RAG Service
+- **Framework:** LangChain + ChromaDB
+- **Embeddings:** HuggingFace `intfloat/multilingual-e5-base` (local GPU or CPU)
+- **Search Method:** MMR (Maximal Marginal Relevance) for balanced relevance and diversity
+- **Features:**
+  - Query expansion (converts colloquial to formal terms)
+  - Automatic document chunking
+  - Deduplication and relevance ranking
+  - Per-museum/artwork vector stores
+
+### LLM Service
+- **Model:** OpenAI GPT-4o-mini (default) or GPT-5
+- **Features:**
+  - Persona-based system prompts
+  - RAG document context injection
+  - Conversation history integration
+  - Forced sentence delimiter (`|||`)
+  - Post-processing: Markdown removal, text cleanup
+
+### SLM Service
+- **Storage:** JSON files for conversation history
+- **Features:**
+  - In-memory cache for fast summary retrieval
+  - Async background task updates
+  - Retains last 5 conversation turns (configurable)
+  - Background conversation persistence
+
+---
+
+## ⚡ Performance Optimizations
+
+- **Vector Store Caching:** All vector stores loaded at startup and maintained in memory
+- **Persona Caching:** Persona files cached in memory to prevent repeated file reads
+- **Background Tasks:** Conversation updates don't block response generation
+- **Async I/O:** FastAPI's async/await for concurrent operations
+- **MMR Search:** Optimized for both accuracy and diversity in document retrieval
+
+---
+
+## 🔧 Troubleshooting
+
+### GPU Not Found
+If HuggingFace Embeddings fail to use GPU:
+```python
+# Modify services/rag_service.py
+self.embeddings = HuggingFaceEmbeddings(
+    model_name="intfloat/multilingual-e5-base",
+    model_kwargs={'device': 'cpu'}  # Change from 'cuda'
+)
 ```
 
-## 🔧 TODO: 실제 구현 시 보완할 부분
+### Vector Store Initialization Fails
+- Check `documents/rag/` directory structure
+- Verify all text files are UTF-8 encoded
+- Ensure file permissions are correct
+- Restart server to reinitialize
 
-### 1. RAG 서비스 고도화
-- **현재**: 간단한 키워드 매칭
-- **개선**: 벡터 임베딩 + 유사도 검색
-  ```python
-  # 추천 라이브러리
-  - langchain + OpenAI embeddings
-  - chromadb (벡터 DB)
-  - sentence-transformers (로컬 임베딩)
-  ```
+### OpenAI API Errors
+- Verify API key is correct in `.env`
+- Check account usage limits
+- Note: GPT-5 models don't support temperature parameter
 
-### 2. SLM 대화 요약
-- **현재**: 최근 N개 대화 단순 포맷팅
-- **개선**: 실제 LLM으로 요약
-  ```python
-  # OpenAI API 또는 로컬 모델(llama.cpp, ollama)
-  ```
-
-### 3. 대화 저장소
-- **현재**: JSON 파일
-- **개선**: Redis, MongoDB 등 DB 사용
-
-### 4. 에러 처리 및 로깅
-- 더 세밀한 예외 처리
-- 구조화된 로깅 (structlog)
-
-### 5. 성능 최적화
-- 문서/페르소나 캐싱
-- 비동기 처리 최적화
-- API 레이트 리밋
-
-## 📝 설정 가이드
-
-### OpenAI API Key 발급
-1. https://platform.openai.com 방문
-2. API Keys 메뉴에서 새 키 생성
-3. `.env` 파일에 `OPENAI_API_KEY=sk-...` 추가
-
-### RAG 문서 작성 가이드
-- 클래스별로 디렉토리 생성
-- 관련 정보를 여러 텍스트 파일로 분할
-- 명확하고 정확한 정보 작성
-
-### 페르소나 작성 가이드
-- 각 클래스의 특성에 맞는 톤 설정
-- 역할, 말투, 전문성 수준 정의
-
-## 🧪 테스트
-
-```bash
-# 헬스 체크
-curl http://localhost:8000/health
-
-# 채팅 테스트
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question":"test","room_id":"test","class_name":"monalisa"}'
-```
+### Empty RAG Results
+- Verify document files exist in `documents/rag/{museum}/{artwork}/`
+- Check file encoding (must be UTF-8)
+- Review server logs for embedding errors

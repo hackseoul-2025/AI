@@ -4,8 +4,6 @@ RAG + LLM 파이프라인 엔드포인트
 """
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional
 import logging
 
 from services.rag_service import RAGService
@@ -43,24 +41,6 @@ llm_service = LLMService()
 # ========================================
 # API Endpoints
 # ========================================
-@app.get("/")
-async def root():
-    """헬스 체크"""
-    return {
-        "status": "good",
-    }
-
-
-@app.get("/health")
-async def health_check():
-    """서비스 상태 확인"""
-    return {
-        "rag_service": "ok",
-        "slm_service": "ok",
-        "llm_service": "ok"
-    }
-
-
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
     """
@@ -90,7 +70,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
         # Step 2: SLM - 기존 저장된 대화 컨텍스트 요약 가져오기 (즉시)
         logger.info(f"[2/3] 기존 대화 컨텍스트 불러오기: {request.room_id}")
         conversation_summary = await slm_service.get_conversation_summary(
-            room_id=request.room_id
+            room_id=str(request.room_id)  # int -> str 명시적 변환
         )
         
         # Step 3: LLM - 최종 답변 생성
@@ -107,7 +87,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
         background_tasks.add_task(
             update_conversation_context,
             slm_service,
-            request.room_id,
+            str(request.room_id),  # int -> str 명시적 변환
             request.question,
             answer
         )

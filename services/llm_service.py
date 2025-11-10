@@ -231,7 +231,7 @@ Q: "누가 만들었어?"
                 else:
                     logger.error("토큰 제한으로 빈 응답 발생")
                     return "질문이 조금 복잡했나봐요 😅 더 간단하게 다시 물어봐 주시겠어요?"
-            print(answer)
+            
             # 빈 응답 체크
             if not answer or answer.strip() == "":
                 logger.warning(f"OpenAI가 빈 응답 반환! finish_reason: {finish_reason}, 토큰: {response.usage.total_tokens}")

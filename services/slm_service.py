@@ -121,13 +121,6 @@ class SLMService:
         
         return "\n\n".join(summary_lines)
     
-    async def summarize_conversation(self, room_id: str) -> Optional[str]:
-        """
-        [DEPRECATED] 기존 메서드 - get_conversation_summary 사용 권장
-        호환성을 위해 남겨둠
-        """
-        return await self.get_conversation_summary(room_id)
-    
     async def save_conversation(
         self, 
         room_id: str, 
@@ -182,32 +175,3 @@ class SLMService:
         self.summary_cache.pop(room_id, None)
         
         logger.info(f"대화 및 요약 삭제됨: {room_id}")
-    
-    async def _call_slm_api(self, conversation_turns: List[Dict]) -> str:
-        """
-        실제 SLM API 호출 (더미)
-        
-        TODO: 실제 구현 옵션:
-        1. OpenAI API (gpt-3.5-turbo)
-        2. 로컬 모델 (llama.cpp, ollama 등)
-        3. HuggingFace transformers
-        
-        예시:
-        ```python
-        from openai import OpenAI
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        
-        messages = [{"role": "system", "content": "대화를 간결히 요약해주세요."}]
-        for turn in conversation_turns:
-            messages.append({"role": "user", "content": turn['question']})
-            messages.append({"role": "assistant", "content": turn['answer']})
-        
-        response = client.chat.completions.create(
-            model=settings.SLM_MODEL,
-            messages=messages
-        )
-        return response.choices[0].message.content
-        ```
-        """
-        # 더미 구현
-        return f"이전 {len(conversation_turns)}개 대화 요약..."

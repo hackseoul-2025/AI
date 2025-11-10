@@ -219,7 +219,7 @@ class RAGService:
             for doc in all_docs:
                 results.append({
                     "content": doc.page_content,
-                    "museum": doc.metadata.get("museum", location),
+                    "location": doc.metadata.get("location", location),  # 키 수정: museum -> location
                     "class": doc.metadata.get("class", class_name),
                     "source": doc.metadata.get("source", "unknown")
                 })
